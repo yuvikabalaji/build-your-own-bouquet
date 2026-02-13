@@ -35,19 +35,22 @@ function BuilderContent() {
   const [search, setSearch] = useState("");
   const [flowers, setFlowers] = useState<Asset[]>([]);
   const [props, setProps] = useState<Asset[]>([]);
+  const [assetsLoading, setAssetsLoading] = useState(true);
   const [selected, setSelected] = useState<SelectedItem[]>([]);
   const [layoutSeed, setLayoutSeed] = useState(Date.now());
   const [isSending, setIsSending] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
+    setAssetsLoading(true);
     fetch("/api/assets")
       .then((r) => r.json())
       .then((data: { flowers: Asset[]; props: Asset[] }) => {
         setFlowers(data.flowers ?? []);
         setProps(data.props ?? []);
       })
-      .catch(() => setToast({ message: "Failed to load assets", type: "error" }));
+      .catch(() => setToast({ message: "Failed to load assets", type: "error" }))
+      .finally(() => setAssetsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -70,11 +73,9 @@ function BuilderContent() {
     const id = `${type}:${filename}`;
     setSelected((prev) => {
       const existing = prev.find((i) => i.id === id);
-      const total = prev.reduce((s, i) => s + i.quantity, 0);
-      if (total >= 20) return prev;
       if (existing) {
         return prev.map((i) =>
-          i.id === id ? { ...i, quantity: Math.min(20, i.quantity + 1) } : i
+          i.id === id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [...prev, { id, label, type, quantity: 1 }];
@@ -82,13 +83,11 @@ function BuilderContent() {
   }, [type]);
 
   const increment = useCallback((id: string) => {
-    setSelected((prev) => {
-      const total = prev.reduce((s, i) => s + i.quantity, 0);
-      if (total >= 20) return prev;
-      return prev.map((i) =>
-        i.id === id ? { ...i, quantity: Math.min(20, i.quantity + 1) } : i
-      );
-    });
+    setSelected((prev) =>
+      prev.map((i) =>
+        i.id === id ? { ...i, quantity: i.quantity + 1 } : i
+      )
+    );
   }, []);
 
   const decrement = useCallback((id: string) => {
@@ -258,64 +257,79 @@ function BuilderContent() {
     }
   };
 
+  const getQuantity = (filename: string) => {
+    const id = `${type}:${filename}`;
+    return selected.find((i) => i.id === id)?.quantity ?? 0;
+  };
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6 py-6">
+    <div className="mx-auto max-w-4xl space-y-4 py-4">
       <h1 className="text-2xl font-bold text-purple-900 md:text-3xl">
         Bouquet Builder
       </h1>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-4 rounded-3xl border-2 border-pink-200/50 bg-white/60 p-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="order-2 flex shrink-0 flex-col gap-4 lg:order-1 lg:w-72">
+          <div className="space-y-2 rounded-2xl border-2 border-pink-200/50 bg-white/60 p-3">
           <Tabs
-            tabs={[
-              { id: "flowers", label: "Flowers" },
-              { id: "props", label: "Props" },
-            ]}
-            activeId={activeTab}
-            onChange={setActiveTab}
-          />
-          <SearchInput
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <div className="grid grid-cols-2 gap-2">
-            {filtered.map((a) => (
+          tabs={[
+            { id: "flowers", label: "Flowers" },
+            { id: "props", label: "Props" },
+          ]}
+          activeId={activeTab}
+          onChange={setActiveTab}
+        />
+        <SearchInput
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="grid min-h-[120px] grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5">
+          {assetsLoading ? (
+            <p className="col-span-full py-8 text-center text-purple-500">
+              Loading flowers and props...
+            </p>
+          ) : filtered.length === 0 ? (
+            <p className="col-span-full py-8 text-center text-purple-500">
+              {search.trim()
+                ? `No ${type}s match your search.`
+                : `No ${type}s found.`}
+            </p>
+          ) : (
+            filtered.map((a) => (
               <AssetCard
                 key={`${type}-${a.filename}`}
                 src={`/assets/${activeTab === "flowers" ? "flowers" : "props"}/${a.filename}`}
                 label={a.label}
-                onAdd={() => addItem(a.filename, a.label)}
-                disabled={
-                  selected.reduce((s, i) => s + i.quantity, 0) >= 20
-                }
+                quantity={getQuantity(a.filename)}
+                onClick={() => addItem(a.filename, a.label)}
               />
-            ))}
+            ))
+          )}
+        </div>
+        <SelectedTray
+          items={selected}
+          onIncrement={increment}
+          onDecrement={decrement}
+          onRemove={remove}
+        />
           </div>
-          <SelectedTray
-            items={selected}
-            onIncrement={increment}
-            onDecrement={decrement}
-            onRemove={remove}
-            maxTotal={20}
-          />
+          <div className="rounded-3xl border-2 border-pink-200/50 bg-white/60 p-4">
+            <h2 className="mb-4 font-semibold text-purple-800">Send Bouquet</h2>
+            <SendForm
+              onSubmit={handleSubmit}
+              onEnhance={handleEnhance}
+              isLoading={isSending}
+            />
+          </div>
         </div>
 
-        <div className="flex items-start">
+        <div className="order-1 flex flex-1 justify-center lg:order-2">
           <BouquetCanvasCard
             placedItems={placedItems}
             seed={layoutSeed}
             onRandomize={handleRandomize}
             onReset={handleReset}
             onDownload={handleDownload}
-          />
-        </div>
-
-        <div className="rounded-3xl border-2 border-pink-200/50 bg-white/60 p-4">
-          <h2 className="mb-4 font-semibold text-purple-800">Send Bouquet</h2>
-          <SendForm
-            onSubmit={handleSubmit}
-            onEnhance={handleEnhance}
-            isLoading={isSending}
           />
         </div>
       </div>

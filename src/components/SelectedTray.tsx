@@ -12,7 +12,6 @@ interface SelectedTrayProps {
   onIncrement: (id: string) => void;
   onDecrement: (id: string) => void;
   onRemove: (id: string) => void;
-  maxTotal?: number;
 }
 
 export function SelectedTray({
@@ -20,15 +19,13 @@ export function SelectedTray({
   onIncrement,
   onDecrement,
   onRemove,
-  maxTotal = 20,
 }: SelectedTrayProps) {
   const total = items.reduce((s, i) => s + i.quantity, 0);
-  const canAdd = total < maxTotal;
 
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-purple-700">
-        {total} / {maxTotal} selected
+        {total} selected
       </p>
       <div className="max-h-40 space-y-1 overflow-y-auto rounded-xl bg-white/60 p-2">
         {items.length === 0 ? (
@@ -55,9 +52,8 @@ export function SelectedTray({
                   {item.quantity}
                 </span>
                 <button
-                  onClick={() => canAdd && onIncrement(item.id)}
-                  disabled={!canAdd}
-                  className="h-6 w-6 rounded-full bg-pink-200 text-purple-700 hover:bg-pink-300 disabled:opacity-50"
+                  onClick={() => onIncrement(item.id)}
+                  className="h-6 w-6 rounded-full bg-pink-200 text-purple-700 hover:bg-pink-300"
                 >
                   +
                 </button>

@@ -27,9 +27,17 @@ export const BOUQUET_LAYOUT = {
   HEAD_CENTER_Y: 0.32,
   TIE_POINT_X: 0.5,
   TIE_POINT_Y: 0.72,
+  WRAP_TOP_Y: 0.44,
   WRAP_BASE_Y: 0.86,
   RADIUS_X: 0.22,
   RADIUS_Y: 0.16,
+} as const;
+
+/** Wrap paper: light pink. Ribbon: cream/yellow. */
+export const BOUQUET_COLORS = {
+  WRAP_FILL: "#fce4ec",
+  RIBBON_FILL: "#fff9c4",
+  RIBBON_BOW: "#fff59d",
 } as const;
 
 function seededRandom(seed: number) {
@@ -104,4 +112,71 @@ export function computeBouquetLayout(
   placed.sort((a, b) => a.y - b.y);
 
   return placed;
+}
+
+/**
+ * Draw wrap paper (tapered cone below flower cluster). Call after shadow, before stems.
+ */
+export function drawWrap(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+  const { WRAP_TOP_Y, WRAP_BASE_Y, TIE_POINT_X } = BOUQUET_LAYOUT;
+  const { WRAP_FILL } = BOUQUET_COLORS;
+
+  const wrapTopY = WRAP_TOP_Y * h;
+  const wrapBaseY = WRAP_BASE_Y * h;
+  const tieX = TIE_POINT_X * w;
+
+  const topHalfW = w * 0.42;
+  const baseHalfW = w * 0.08;
+  const path = new Path2D();
+  path.moveTo(tieX - topHalfW, wrapTopY);
+  path.lineTo(tieX + topHalfW, wrapTopY);
+  path.lineTo(tieX + baseHalfW, wrapBaseY);
+  path.lineTo(tieX - baseHalfW, wrapBaseY);
+  path.closePath();
+  ctx.save();
+  ctx.fillStyle = WRAP_FILL;
+  ctx.fill(path);
+  ctx.restore();
+}
+
+/**
+ * Draw ribbon band and bow at tie point. Call after stems, before flower heads.
+ */
+export function drawRibbon(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+  const { TIE_POINT_X, TIE_POINT_Y } = BOUQUET_LAYOUT;
+  const { RIBBON_FILL, RIBBON_BOW } = BOUQUET_COLORS;
+
+  const tieX = TIE_POINT_X * w;
+  const tieY = TIE_POINT_Y * h;
+
+  const bandH = h * 0.04;
+  const bandW = w * 0.5;
+  ctx.save();
+  ctx.fillStyle = RIBBON_FILL;
+  ctx.fillRect(tieX - bandW / 2, tieY - bandH / 2, bandW, bandH);
+  ctx.restore();
+
+  const bowRadius = w * 0.08;
+  const bowY = tieY - bandH * 0.5;
+  ctx.save();
+  ctx.fillStyle = RIBBON_BOW;
+  ctx.beginPath();
+  ctx.ellipse(tieX - bowRadius * 1.2, bowY, bowRadius, bowRadius * 1.2, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(tieX + bowRadius * 1.2, bowY, bowRadius, bowRadius * 1.2, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(tieX, bowY, bowRadius * 0.5, bowRadius * 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Draw wrap only (before stems). Call drawRibbon after stems, before flower heads. */
+export function drawWrapAndRibbon(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number
+): void {
+  drawWrap(ctx, w, h);
 }

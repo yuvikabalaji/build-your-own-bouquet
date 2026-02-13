@@ -42,9 +42,6 @@ function SuccessContent() {
             <CandyButton variant="secondary">Download</CandyButton>
           </a>
         )}
-        <Link href="/">
-          <CandyButton variant="secondary">Home</CandyButton>
-        </Link>
       </div>
     </div>
   );

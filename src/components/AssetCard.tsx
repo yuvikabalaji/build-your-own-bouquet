@@ -5,34 +5,37 @@ import Image from "next/image";
 interface AssetCardProps {
   src: string;
   label: string;
-  onAdd: () => void;
-  disabled?: boolean;
+  quantity: number;
+  onClick: () => void;
 }
 
-export function AssetCard({ src, label, onAdd, disabled }: AssetCardProps) {
+export function AssetCard({ src, label, quantity, onClick }: AssetCardProps) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border-2 border-pink-200/50 bg-white/80 shadow-sm transition-shadow hover:shadow-md">
-      <div className="relative aspect-square p-2">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex flex-col overflow-hidden rounded-2xl border-2 border-pink-200/50 bg-white/80 text-left shadow-sm transition-shadow hover:shadow-md hover:border-pink-300/70"
+    >
+      <div className="relative flex min-h-[80px] min-w-[80px] items-center justify-center p-2">
         <Image
           src={src}
           alt={label}
-          fill
+          width={80}
+          height={80}
           className="object-contain"
-          sizes="(max-width: 768px) 50vw, 150px"
+          unoptimized
         />
+        {quantity > 0 && (
+          <span className="absolute right-1.5 top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-purple-500 px-1.5 text-xs font-bold text-white">
+            {quantity}
+          </span>
+        )}
       </div>
-      <div className="flex items-center justify-between gap-2 border-t border-pink-100 p-2">
+      <div className="border-t border-pink-100 p-2">
         <span className="truncate text-sm font-medium text-purple-800">
           {label}
         </span>
-        <button
-          onClick={onAdd}
-          disabled={disabled}
-          className="rounded-full bg-pink-300 px-3 py-1 text-xs font-medium text-white hover:bg-pink-400 disabled:opacity-50"
-        >
-          Add
-        </button>
       </div>
-    </div>
+    </button>
   );
 }
