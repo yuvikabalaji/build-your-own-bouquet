@@ -130,13 +130,13 @@ export function BouquetCanvasCard({
   }, [placedItems, baseUrl, seed]);
 
   return (
-    <div className="rounded-2xl border-2 border-pink-200/50 bg-white/80 p-3 shadow-lg">
-      <h3 className="mb-2 text-center text-sm font-semibold text-purple-800">
+    <div className="rounded-3xl border-2 border-pink-200/50 bg-white/80 p-4 shadow-lg">
+      <h3 className="mb-3 text-center font-semibold text-purple-800">
         Bouquet Preview
       </h3>
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square max-h-[220px] w-full max-w-[220px] rounded-xl bg-gradient-to-b from-pink-50/80 to-purple-50/80 overflow-hidden"
+        className="relative mx-auto aspect-square max-h-[400px] w-full max-w-[400px] rounded-2xl bg-gradient-to-b from-pink-50/80 to-purple-50/80 overflow-hidden"
       >
         {placedItems.length === 0 ? (
           <div className="flex h-full w-full items-center justify-center text-purple-400">
@@ -149,11 +149,11 @@ export function BouquetCanvasCard({
           />
         )}
       </div>
-      <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+      <div className="mt-3 flex flex-wrap justify-center gap-2">
         {onRandomize && (
           <button
             onClick={onRandomize}
-            className="rounded-full bg-purple-200 px-2.5 py-1 text-xs text-purple-800 hover:bg-purple-300"
+            className="rounded-full bg-purple-200 px-3 py-1.5 text-sm text-purple-800 hover:bg-purple-300"
           >
             Randomize layout
           </button>
@@ -161,7 +161,7 @@ export function BouquetCanvasCard({
         {onReset && (
           <button
             onClick={onReset}
-            className="rounded-full bg-pink-200 px-2.5 py-1 text-xs text-purple-800 hover:bg-pink-300"
+            className="rounded-full bg-pink-200 px-3 py-1.5 text-sm text-purple-800 hover:bg-pink-300"
           >
             Reset
           </button>
@@ -169,7 +169,7 @@ export function BouquetCanvasCard({
         {onDownload && (
           <button
             onClick={onDownload}
-            className="rounded-full bg-gradient-to-r from-pink-400 to-purple-400 px-2.5 py-1 text-xs text-white hover:shadow-md"
+            className="rounded-full bg-gradient-to-r from-pink-400 to-purple-400 px-3 py-1.5 text-sm text-white hover:shadow-md"
           >
             Download
           </button>

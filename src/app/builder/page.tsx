@@ -263,73 +263,72 @@ function BuilderContent() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 py-4">
+    <div className="mx-auto max-w-7xl space-y-6 py-6">
       <h1 className="text-2xl font-bold text-purple-900 md:text-3xl">
         Bouquet Builder
       </h1>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="order-2 flex shrink-0 flex-col gap-4 lg:order-1 lg:w-72">
-          <div className="space-y-2 rounded-2xl border-2 border-pink-200/50 bg-white/60 p-3">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-4 rounded-3xl border-2 border-pink-200/50 bg-white/60 p-4">
           <Tabs
-          tabs={[
-            { id: "flowers", label: "Flowers" },
-            { id: "props", label: "Props" },
-          ]}
-          activeId={activeTab}
-          onChange={setActiveTab}
-        />
-        <SearchInput
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="grid min-h-[120px] grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5">
-          {assetsLoading ? (
-            <p className="col-span-full py-8 text-center text-purple-500">
-              Loading flowers and props...
-            </p>
-          ) : filtered.length === 0 ? (
-            <p className="col-span-full py-8 text-center text-purple-500">
-              {search.trim()
-                ? `No ${type}s match your search.`
-                : `No ${type}s found.`}
-            </p>
-          ) : (
-            filtered.map((a) => (
-              <AssetCard
-                key={`${type}-${a.filename}`}
-                src={`/assets/${activeTab === "flowers" ? "flowers" : "props"}/${a.filename}`}
-                label={a.label}
-                quantity={getQuantity(a.filename)}
-                onClick={() => addItem(a.filename, a.label)}
-              />
-            ))
-          )}
-        </div>
-        <SelectedTray
-          items={selected}
-          onIncrement={increment}
-          onDecrement={decrement}
-          onRemove={remove}
-        />
+            tabs={[
+              { id: "flowers", label: "Flowers" },
+              { id: "props", label: "Props" },
+            ]}
+            activeId={activeTab}
+            onChange={setActiveTab}
+          />
+          <SearchInput
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="grid min-h-[120px] grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-3">
+            {assetsLoading ? (
+              <p className="col-span-full py-8 text-center text-purple-500">
+                Loading flowers and props...
+              </p>
+            ) : filtered.length === 0 ? (
+              <p className="col-span-full py-8 text-center text-purple-500">
+                {search.trim()
+                  ? `No ${type}s match your search.`
+                  : `No ${type}s found.`}
+              </p>
+            ) : (
+              filtered.map((a) => (
+                <AssetCard
+                  key={`${type}-${a.filename}`}
+                  src={`/assets/${activeTab === "flowers" ? "flowers" : "props"}/${a.filename}`}
+                  label={a.label}
+                  quantity={getQuantity(a.filename)}
+                  onClick={() => addItem(a.filename, a.label)}
+                />
+              ))
+            )}
           </div>
-          <div className="rounded-3xl border-2 border-pink-200/50 bg-white/60 p-4">
-            <h2 className="mb-4 font-semibold text-purple-800">Send Bouquet</h2>
-            <SendForm
-              onSubmit={handleSubmit}
-              onEnhance={handleEnhance}
-              isLoading={isSending}
-            />
-          </div>
+          <SelectedTray
+            items={selected}
+            onIncrement={increment}
+            onDecrement={decrement}
+            onRemove={remove}
+          />
         </div>
 
-        <div className="order-1 flex flex-1 justify-center lg:order-2">
+        <div className="flex items-start justify-center">
           <BouquetCanvasCard
             placedItems={placedItems}
             seed={layoutSeed}
             onRandomize={handleRandomize}
             onReset={handleReset}
             onDownload={handleDownload}
+          />
+        </div>
+
+        <div className="rounded-3xl border-2 border-pink-200/50 bg-white/60 p-4">
+          <h2 className="mb-4 font-semibold text-purple-800">Send Bouquet</h2>
+          <SendForm
+            onSubmit={handleSubmit}
+            onEnhance={handleEnhance}
+            isLoading={isSending}
           />
         </div>
       </div>
