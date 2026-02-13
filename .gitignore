@@ -1,0 +1,12 @@
+/node_modules
+/.pnp
+.pnp.js
+.next/
+out/
+build
+.DS_Store
+*.pem
+.env*.local
+.env
+.vercel
+/public/generated/*.png
