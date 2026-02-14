@@ -14,6 +14,7 @@ import {
   type BouquetItem,
   type PlacedItem,
 } from "@/lib/canvas-utils";
+import { setLastSentBouquet } from "@/lib/last-bouquet-store";
 
 interface Asset {
   filename: string;
@@ -256,6 +257,14 @@ function BuilderContent() {
       }
       if (!res.ok) {
         throw new Error(json.error ?? "Send failed");
+      }
+      if (typeof window !== "undefined" && imageData) {
+        setLastSentBouquet(imageData);
+        try {
+          sessionStorage.setItem("byob-sent-bouquet", imageData);
+        } catch {
+          /* sessionStorage full or unavailable; in-memory store still has it */
+        }
       }
       router.push(json.filename ? `/success?file=${json.filename}` : "/success");
     } catch (err) {

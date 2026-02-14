@@ -1,15 +1,33 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CandyButton } from "@/components/CandyButton";
+import { takeLastSentBouquet } from "@/lib/last-bouquet-store";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const file = searchParams.get("file");
+  const [imageData, setImageData] = useState<string | null>(null);
 
-  const downloadUrl = file && file !== "null" ? `/generated/${file}` : null;
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("byob-sent-bouquet");
+      if (stored) {
+        setImageData(stored);
+        sessionStorage.removeItem("byob-sent-bouquet");
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    const inMemory = takeLastSentBouquet();
+    if (inMemory) setImageData(inMemory);
+  }, []);
+
+  const fileUrl = file && file !== "null" ? `/generated/${file}` : null;
+  const imageSrc = imageData || fileUrl;
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-12 text-center">
@@ -18,10 +36,10 @@ function SuccessContent() {
       </div>
 
       <div className="overflow-hidden rounded-3xl border-2 border-pink-200/50 bg-white/80 shadow-lg">
-        {downloadUrl ? (
+        {imageSrc ? (
           <div className="aspect-square max-h-[400px] w-full bg-gradient-to-b from-pink-50/80 to-purple-50/80 p-4">
             <img
-              src={downloadUrl}
+              src={imageSrc}
               alt="Your bouquet"
               className="mx-auto h-full w-full object-contain"
             />
@@ -37,8 +55,8 @@ function SuccessContent() {
         <Link href="/builder">
           <CandyButton variant="primary">Send Another</CandyButton>
         </Link>
-        {downloadUrl && (
-          <a href={downloadUrl} download>
+        {imageSrc && (
+          <a href={imageSrc} download="bouquet.jpg">
             <CandyButton variant="secondary">Download</CandyButton>
           </a>
         )}
