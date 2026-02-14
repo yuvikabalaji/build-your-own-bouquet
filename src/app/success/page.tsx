@@ -9,7 +9,7 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const file = searchParams.get("file");
 
-  const downloadUrl = file ? `/generated/${file}` : null;
+  const downloadUrl = file && file !== "null" ? `/generated/${file}` : null;
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-12 text-center">

@@ -114,7 +114,7 @@ function BuilderContent() {
   const handleRandomize = () => setLayoutSeed(Date.now());
   const handleReset = () => setSelected([]);
 
-  const generateBouquetImage = useCallback((): Promise<string> => {
+  const generateBouquetImage = useCallback((format: "png" | "jpeg" = "png"): Promise<string> => {
     const w = 400;
     const h = 400;
     const canvas = document.createElement("canvas");
@@ -195,7 +195,7 @@ function BuilderContent() {
       drawShadow();
       drawStemsAndSticks();
       for (let i = 0; i < placedItems.length; i++) await draw(placedItems[i], i);
-      return canvas.toDataURL("image/png");
+      return canvas.toDataURL(format === "jpeg" ? "image/jpeg" : "image/png", format === "jpeg" ? 0.85 : undefined);
     })();
   }, [placedItems]);
 
@@ -231,7 +231,7 @@ function BuilderContent() {
     }
     setIsSending(true);
     try {
-      const imageData = await generateBouquetImage();
+      const imageData = await generateBouquetImage("jpeg");
       const res = await fetch("/api/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -242,11 +242,22 @@ function BuilderContent() {
           imageData,
         }),
       });
-      const json = await res.json();
+      const text = await res.text();
+      let json: { error?: string; filename?: string };
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        const preview = text.slice(0, 200);
+        throw new Error(
+          preview.includes("<!DOCTYPE") || preview.includes("<html")
+            ? "Server returned an error page. The image may be too large—try fewer flowers."
+            : "Invalid response from server. Please try again."
+        );
+      }
       if (!res.ok) {
         throw new Error(json.error ?? "Send failed");
       }
-      router.push(`/success?file=${json.filename}`);
+      router.push(json.filename ? `/success?file=${json.filename}` : "/success");
     } catch (err) {
       setToast({
         message: err instanceof Error ? err.message : "Send failed",

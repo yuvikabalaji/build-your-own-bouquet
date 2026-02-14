@@ -48,39 +48,64 @@ export async function POST(req: NextRequest) {
 
   const { receiverEmail, senderName, message, imageData } = parsed.data;
 
-  const base64Data = imageData.replace(/^data:image\/png;base64,/, "");
-  const buf = Buffer.from(base64Data, "base64");
+  try {
+    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
 
-  const generatedDir = path.join(process.cwd(), "public", "generated");
-  if (!fs.existsSync(generatedDir)) fs.mkdirSync(generatedDir, { recursive: true });
+    const ext = imageData.startsWith("data:image/jpeg") ? "jpg" : "png";
+    const filename = `bouquet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-  const filename = `bouquet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`;
-  const outPath = path.join(generatedDir, filename);
-  fs.writeFileSync(outPath, buf);
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
 
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+    if (emailUser && emailPass) {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: { user: emailUser, pass: emailPass },
+      });
 
-  if (emailUser && emailPass) {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: { user: emailUser, pass: emailPass },
+      const fromLabel = senderName ? `${senderName} <${emailUser}>` : emailUser;
+      await transporter.sendMail({
+        from: fromLabel,
+        to: receiverEmail,
+        subject: "You received a virtual bouquet!",
+        text: message || "Someone sent you a bouquet from Build Your Own Bouquet!",
+        attachments: [{ filename, content: buf }],
+      });
+    }
+
+    let savedFilename: string | null = filename;
+    try {
+      const generatedDir = path.join(process.cwd(), "public", "generated");
+      if (!fs.existsSync(generatedDir)) fs.mkdirSync(generatedDir, { recursive: true });
+      const outPath = path.join(generatedDir, filename);
+      fs.writeFileSync(outPath, buf);
+    } catch (writeErr) {
+      console.warn("Could not save image to disk (e.g. on Vercel):", writeErr);
+      savedFilename = null;
+    }
+
+    return NextResponse.json({
+      success: true,
+      filename: savedFilename,
     });
-
-    const fromLabel = senderName ? `${senderName} <${emailUser}>` : emailUser;
-    await transporter.sendMail({
-      from: fromLabel,
-      to: receiverEmail,
-      subject: "You received a virtual bouquet!",
-      text: message || "Someone sent you a bouquet from Build Your Own Bouquet!",
-      attachments: [{ filename, content: buf }],
-    });
+  } catch (err) {
+    console.error("Send bouquet error:", err);
+    let message = "Failed to send bouquet";
+    if (err instanceof Error) {
+      if (err.message.includes("EACCES") || err.message.includes("read-only")) {
+        message = "Server cannot save files. Try running locally or check deployment.";
+      } else if (err.message.includes("Invalid login") || err.message.includes("authentication")) {
+        message = "Email credentials invalid. Check EMAIL_USER and EMAIL_PASS.";
+      } else {
+        message = err.message;
+      }
+    }
+    return NextResponse.json(
+      { error: message },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({
-    success: true,
-    filename,
-  });
 }
